@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "mode": "open",
+  "enforceAt": 0,
+  "message": "للمتابعة تواصل معنا لتفعيل جهازك",
+  "payUrl": "https://wa.me/رقمك",
+  "support": "",
+  "activationServer": "",
+  "update": {
+    "version": "1.3.17",
+    "url": "https://raw.githubusercontent.com/mi23-cloud/zenpro-policy/main/app.bundle.js",
+    "sig": "نفّذ: node sign_update.js app.bundle.js ثم ضع sig هنا",
+    "notes": "MIRA PLAYER: اسم جديد، التفعيل بالـMAC بلا PIN، أيقونتا المفضلة والبحث في Live، وزر بحث في الأفلام والمسلسلات",
+    "size": 454537
+  }
+}
