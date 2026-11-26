@@ -121,7 +121,7 @@
   var DEV = false;
   var DEV_HOST = "";
   var DEV_PLEX_URL = "";
-  var VERSION = "1.0.1";
+  var VERSION = "1.0.3";
 
   // app/js/router.js
   var router_exports = {};
@@ -2144,9 +2144,9 @@
   function ensureCurrentProfile() {
     const s = session.server && session.server.saved;
     if (!s || !s.uri) return;
-    const label = s.kind === "xtream" ? "Xtream" : s.kind === "stalker" ? "MAC portal" : "Plex";
+    const label = s.managed ? "Provider" : s.kind === "xtream" ? "Xtream" : s.kind === "stalker" ? "MAC portal" : "Plex";
     const id = [s.kind || "plex", s.uri, s.user || s.mac || ""].join("|");
-    if (!profiles().some((p) => p.id === id)) rememberProfile(s, label + " \xB7 " + (s.name || s.uri) + (s.user && !s.managed ? " (" + s.user + ")" : ""));
+    if (!profiles().some((p) => p.id === id)) rememberProfile(s, s.managed ? label : label + " \xB7 " + (s.name || s.uri) + (s.user && !s.managed ? " (" + s.user + ")" : ""));
   }
   function forgetProfile(id) {
     set("profiles", profiles().filter((p) => p.id !== id));
@@ -3045,6 +3045,7 @@
   var el = null;
   var timer2 = 0;
   function toast(text, ms2) {
+    text = T(text);
     if (!el) {
       el = document.createElement("div");
       el.className = "toast";
@@ -3084,7 +3085,7 @@
     let sbtn = null;
     if (canSearch) {
       sbtn = h("div", "lib-sbtn", head);
-      sbtn.innerHTML = search + "<span>Search</span>";
+      sbtn.innerHTML = search + "<span>" + T("Search") + "</span>";
       sbtn.addEventListener("click", () => openSearch(scopeKind));
     }
     function focusHead(on) {
@@ -6330,7 +6331,7 @@
     icon.innerHTML = search;
     const input = h("input", "search-input", bar);
     input.type = "text";
-    input.placeholder = scope === "live" ? "Search channels" : scope === "vod" ? "Search movies" : scope === "series" ? "Search series" : "Search movies and shows";
+    input.placeholder = T(scope === "live" ? "Search channels" : scope === "vod" ? "Search movies" : scope === "series" ? "Search series" : "Search movies and shows");
     input.setAttribute("autocomplete", "off");
     const status = h("div", "search-status", el3);
     const clip = h("div", "search-rows", el3);
@@ -8174,7 +8175,7 @@
     h("h1", "picker-title", el3).textContent = title;
     if (!isTizen) {
       const back2 = h("div", "back-btn", el3);
-      back2.textContent = "\u2039 Back";
+      back2.textContent = T("\u2039 Back");
       back2.addEventListener("click", (e) => {
         e.stopPropagation();
         back();
@@ -8438,25 +8439,25 @@
   function AddServer({ onDone, welcome }) {
     const el3 = h("div", "screen picker form");
     const ambience = useAmbience();
-    h("h1", "picker-title", el3).textContent = welcome ? "Welcome to MIRA PLAYER" : "Add a provider";
+    h("h1", "picker-title", el3).textContent = T(welcome ? "Welcome to MIRA PLAYER" : "Add a provider");
     if (!isTizen) {
       if (!welcome) {
         const back2 = h("div", "back-btn", el3);
-        back2.textContent = "\u2039 Back";
+        back2.textContent = T("\u2039 Back");
         back2.addEventListener("click", (e) => {
           e.stopPropagation();
           back();
         });
       }
-      h("div", "kbd-hint", el3).textContent = "\u2191 \u2193 move   Enter select   Esc back   or click an option";
+      h("div", "kbd-hint", el3).textContent = T("\u2191 \u2193 move   Enter select   Esc back   or click an option");
     }
     const list = h("div", "form-list", el3);
     h("div", "form-lead", list).innerHTML = actLead();
     const choices = addChoices(onDone);
     const btns = choices.map((c) => {
       const b = h("div", "btn btn-wide", list);
-      h("span", "", b).textContent = c.label;
-      h("small", "", b).textContent = c.note;
+      h("span", "", b).textContent = T(c.label);
+      h("small", "", b).textContent = T(c.note);
       return b;
     });
     let index = 0;
@@ -9412,7 +9413,7 @@
     const title = h("h1", "picker-title", el3);
     if (!isTizen) {
       const back2 = h("div", "back-btn", el3);
-      back2.textContent = "\u2039 Back";
+      back2.textContent = T("\u2039 Back");
       back2.addEventListener("click", (e) => {
         e.stopPropagation();
         back();
@@ -9654,7 +9655,7 @@
     { id: "violet", label: "Violet", rgb: [167, 139, 250] },
     { id: "gold", label: "Gold", rgb: [212, 175, 55] },
     { id: "silver", label: "Silver", rgb: [196, 202, 209] },
-    { id: "champions", label: "Champions Blue", rgb: [18, 42, 99] }
+    { id: "champions", label: "Champions Blue", rgb: [54, 114, 230] }
   ];
   function currentTheme() {
     return THEMES.find((t) => t.id === get("theme", "jade")) || THEMES[0];
@@ -9798,7 +9799,7 @@
   function SettingsScreen() {
     const el3 = h("div", "screen settings");
     const ambience = useAmbience();
-    h("h1", "settings-title", el3).textContent = "Settings";
+    h("h1", "settings-title", el3).textContent = T("Settings");
     const view = h("div", "settings-view", el3);
     const list = h("div", "settings-list", view);
     const foot = h("div", "settings-foot", el3);
@@ -9809,7 +9810,12 @@
     function build() {
       list.innerHTML = "";
       items = [
-        { label: "Providers", value: (profiles().length || 0) + " saved", run: () => push(ServersScreen({ onDone: restart2 })) },
+        { label: "Language", value: (LANGS.find((l) => l.id === curLang()) || LANGS[0]).label, run: () => {
+          const ids = LANGS.map((l) => l.id);
+          setLang(ids[(ids.indexOf(curLang()) + 1) % ids.length]);
+          window.dispatchEvent(new Event("zenpro:restart"));
+        } },
+        { label: "Providers", value: (profiles().length || 0) + " " + T("saved"), run: () => push(ServersScreen({ onDone: restart2 })) },
         { label: "MAC address", value: macRowText(), action: "Change", run: () => {
           const m = tvMac();
           if (m.real && m.source !== "Typed") toast(m.source + " MAC of this device: " + m.mac, 7e3);
@@ -9874,8 +9880,8 @@
       ];
       items.forEach((it) => {
         it.el = h("div", "setting", list);
-        h("span", "setting-label", it.el).textContent = it.label;
-        h("span", "setting-value", it.el).textContent = it.value + (it.action ? "  \xB7  " + it.action : "");
+        h("span", "setting-label", it.el).textContent = T(it.label);
+        h("span", "setting-value", it.el).textContent = T(it.value) + (it.action ? "  \xB7  " + T(it.action) : "");
       });
       render();
     }
@@ -10258,11 +10264,11 @@
     const pvSpin = h("div", "spinner lb-spin", pvBox);
     const tools = h("div", "lb-tools", side);
     const toolFav = h("div", "lb-tool", tools);
-    toolFav.innerHTML = '<span class="lb-tstar">\u2605</span><span>Favorites</span>';
+    toolFav.innerHTML = '<span class="lb-tstar">\u2605</span><span>' + T("Favorites") + "</span>";
     const toolSearch = h("div", "lb-tool", tools);
-    toolSearch.innerHTML = search + "<span>Search</span>";
+    toolSearch.innerHTML = search + "<span>" + T("Search") + "</span>";
     const favBar = h("div", "lb-favbar", el3);
-    favBar.textContent = "\u2605 Favorites mode \u00B7 OK on a channel adds / removes it \u00B7 Back to finish";
+    favBar.textContent = T("\u2605 Favorites mode \u00B7 OK on a channel adds / removes it \u00B7 Back to finish");
     const info = h("div", "lb-info lb-i2", side);
     const infoLogo = h("img", "lb-logo", info);
     const infoName = h("div", "lb-name", info);
@@ -11571,7 +11577,90 @@
     } catch (e) {
     }
   }
+
+  // ===== MIRA PLAYER: language / i18n =====
+  // Keyed by the original English text; T() falls back to English untouched if a key or language
+  // is missing, so an incomplete dictionary never breaks the UI, only leaves that bit in English.
+  var LANGS = [
+    { id: "en", label: "English", rtl: false },
+    { id: "ar", label: "\u0627\u0644\u0639\u0631\u0628\u064a\u0629", rtl: true },
+    { id: "es", label: "Espa\u00f1ol", rtl: false },
+    { id: "de", label: "Deutsch", rtl: false },
+    { id: "fr", label: "Fran\u00e7ais", rtl: false }
+  ];
+  function curLang() {
+    var v = get("lang", "en");
+    return LANGS.some(function(l) { return l.id === v; }) ? v : "en";
+  }
+  function setLang(id) {
+    set("lang", id);
+    applyLangDir();
+  }
+  function applyLangDir() {
+    var l = LANGS.find(function(l2) { return l2.id === curLang(); }) || LANGS[0];
+    try {
+      document.documentElement.setAttribute("dir", l.rtl ? "rtl" : "ltr");
+      document.documentElement.setAttribute("lang", l.id);
+    } catch (e) {
+    }
+  }
+  var I18N = {
+    "Settings": ["\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a", "Ajustes", "Einstellungen", "Param\u00e8tres"],
+    "Providers": ["\u0627\u0644\u0645\u0632\u0648\u062f\u0648\u0646", "Proveedores", "Anbieter", "Fournisseurs"],
+    "saved": ["\u0645\u062d\u0641\u0648\u0638", "guardado(s)", "gespeichert", "enregistr\u00e9(s)"],
+    "MAC address": ["\u0639\u0646\u0648\u0627\u0646 MAC", "Direcci\u00f3n MAC", "MAC-Adresse", "Adresse MAC"],
+    "Change": ["\u062a\u063a\u064a\u064a\u0631", "Cambiar", "\u00c4ndern", "Modifier"],
+    "Activation": ["\u0627\u0644\u062a\u0641\u0639\u064a\u0644", "Activaci\u00f3n", "Aktivierung", "Activation"],
+    "Activate": ["\u062a\u0641\u0639\u064a\u0644", "Activar", "Aktivieren", "Activer"],
+    "Check now": ["\u062a\u062d\u0642\u0642 \u0627\u0644\u0622\u0646", "Comprobar ahora", "Jetzt pr\u00fcfen", "V\u00e9rifier maintenant"],
+    "Not activated": ["\u063a\u064a\u0631 \u0645\u0641\u0639\u0651\u0644", "No activado", "Nicht aktiviert", "Non activ\u00e9"],
+    "Checking\u2026": ["\u062c\u0627\u0631\u064d \u0627\u0644\u062a\u062d\u0642\u0642\u2026", "Comprobando\u2026", "Wird gepr\u00fcft\u2026", "V\u00e9rification\u2026"],
+    "Up to date": ["\u0645\u062d\u062f\u0651\u062b", "Actualizado", "Aktuell", "\u00c0 jour"],
+    "Can't reach your provider right now": ["\u062a\u0639\u0630\u0651\u0631 \u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0645\u0632\u0648\u0651\u062f\u0643 \u0627\u0644\u0622\u0646", "No se puede contactar con tu proveedor ahora", "Anbieter momentan nicht erreichbar", "Impossible de joindre votre fournisseur pour le moment"],
+    "Channel order": ["\u062a\u0631\u062a\u064a\u0628 \u0627\u0644\u0642\u0646\u0648\u0627\u062a", "Orden de canales", "Senderreihenfolge", "Ordre des cha\u00eenes"],
+    "Move channels inside a bouquet": ["\u062a\u062d\u0631\u064a\u0643 \u0627\u0644\u0642\u0646\u0648\u0627\u062a \u062f\u0627\u062e\u0644 \u0627\u0644\u0628\u0627\u0642\u0629", "Mover canales dentro de un paquete", "Sender innerhalb eines Bouquets verschieben", "D\u00e9placer les cha\u00eenes dans un bouquet"],
+    "Open": ["\u0641\u062a\u062d", "Abrir", "\u00d6ffnen", "Ouvrir"],
+    "Player engine": ["\u0645\u062d\u0631\u0651\u0643 \u0627\u0644\u062a\u0634\u063a\u064a\u0644", "Motor de reproducci\u00f3n", "Player-Engine", "Moteur de lecture"],
+    "VPN": ["VPN", "VPN", "VPN", "VPN"],
+    "Free VPN: Proton VPN": ["VPN \u0645\u062c\u0627\u0646\u064a\u0629: Proton VPN", "VPN gratis: Proton VPN", "Kostenloses VPN: Proton VPN", "VPN gratuit\u00a0: Proton VPN"],
+    "Live TV buffer": ["\u0645\u062e\u0632\u0646 \u0627\u0644\u0628\u062b \u0627\u0644\u0645\u0628\u0627\u0634\u0631", "B\u00fafer de TV en vivo", "Live-TV-Puffer", "Tampon TV en direct"],
+    "Live TV stream format": ["\u0635\u064a\u063a\u0629 \u0628\u062b Live TV", "Formato de transmisi\u00f3n en vivo", "Live-TV-Streamformat", "Format du flux TV en direct"],
+    "Start on last channel": ["\u0627\u0628\u062f\u0623 \u0639\u0646\u062f \u0622\u062e\u0631 \u0642\u0646\u0627\u0629", "Iniciar en el \u00faltimo canal", "Beim letzten Sender starten", "D\u00e9marrer sur la derni\u00e8re cha\u00eene"],
+    "On": ["\u062a\u0634\u063a\u064a\u0644", "Activado", "An", "Activ\u00e9"],
+    "Off": ["\u0625\u064a\u0642\u0627\u0641", "Desactivado", "Aus", "D\u00e9sactiv\u00e9"],
+    "Adult bouquets": ["\u0627\u0644\u0628\u0627\u0642\u0627\u062a \u0644\u0644\u0628\u0627\u0644\u063a\u064a\u0646", "Paquetes para adultos", "Erwachsenen-Bouquets", "Bouquets adultes"],
+    "Sleep timer": ["\u0645\u0624\u0642\u0651\u062a \u0627\u0644\u0646\u0648\u0645", "Temporizador de apagado", "Sleep-Timer", "Minuterie de veille"],
+    "Accent color": ["\u0644\u0648\u0646 \u0627\u0644\u062a\u0645\u064a\u064a\u0632", "Color de acento", "Akzentfarbe", "Couleur d'accent"],
+    "OK to adjust brightness": ["OK \u0644\u0636\u0628\u0637 \u0627\u0644\u0633\u0637\u0648\u0639", "OK para ajustar el brillo", "OK f\u00fcr Helligkeit anpassen", "OK pour ajuster la luminosit\u00e9"],
+    "Performance overlay": ["\u0637\u0628\u0642\u0629 \u0627\u0644\u0623\u062f\u0627\u0621", "Superposici\u00f3n de rendimiento", "Leistungs\u00fcberlagerung", "Overlay de performance"],
+    "Language": ["\u0627\u0644\u0644\u063a\u0629", "Idioma", "Sprache", "Langue"],
+    "Add a provider": ["\u0623\u0636\u0641 \u0645\u0632\u0648\u0651\u062f\u064b\u0627", "A\u00f1adir un proveedor", "Anbieter hinzuf\u00fcgen", "Ajouter un fournisseur"],
+    "Welcome to MIRA PLAYER": ["\u0623\u0647\u0644\u064b\u0627 \u0628\u0643 \u0641\u064a MIRA PLAYER", "Bienvenido a MIRA PLAYER", "Willkommen bei MIRA PLAYER", "Bienvenue sur MIRA PLAYER"],
+    "\u2039 Back": ["\u203a \u0631\u062c\u0648\u0639", "\u2039 Atr\u00e1s", "\u2039 Zur\u00fcck", "\u2039 Retour"],
+    "\u2191 \u2193 move   Enter select   Esc back   or click an option": ["\u2191 \u2193 \u062a\u0646\u0642\u0644   Enter \u0627\u062e\u062a\u064a\u0627\u0631   Esc \u0631\u062c\u0648\u0639   \u0623\u0648 \u0627\u0636\u063a\u0637 \u062e\u064a\u0627\u0631\u064b\u0627", "\u2191 \u2193 mover   Enter seleccionar   Esc atr\u00e1s   o haz clic en una opci\u00f3n", "\u2191 \u2193 bewegen   Enter ausw\u00e4hlen   Esc zur\u00fcck   oder Option anklicken", "\u2191 \u2193 d\u00e9placer   Entr\u00e9e s\u00e9lectionner   \u00c9chap retour   ou cliquer sur une option"],
+    "Favorites": ["\u0627\u0644\u0645\u0641\u0636\u0644\u0629", "Favoritos", "Favoriten", "Favoris"],
+    "Search": ["\u0628\u062d\u062b", "Buscar", "Suchen", "Rechercher"],
+    "Search channels": ["\u0628\u062d\u062b \u0641\u064a \u0627\u0644\u0642\u0646\u0648\u0627\u062a", "Buscar canales", "Sender suchen", "Rechercher des cha\u00eenes"],
+    "Search movies": ["\u0628\u062d\u062b \u0641\u064a \u0627\u0644\u0623\u0641\u0644\u0627\u0645", "Buscar pel\u00edculas", "Filme suchen", "Rechercher des films"],
+    "Search series": ["\u0628\u062d\u062b \u0641\u064a \u0627\u0644\u0645\u0633\u0644\u0633\u0644\u0627\u062a", "Buscar series", "Serien suchen", "Rechercher des s\u00e9ries"],
+    "Search movies and shows": ["\u0628\u062d\u062b \u0641\u064a \u0627\u0644\u0623\u0641\u0644\u0627\u0645 \u0648\u0627\u0644\u0645\u0633\u0644\u0633\u0644\u0627\u062a", "Buscar pel\u00edculas y series", "Filme und Serien suchen", "Rechercher des films et des s\u00e9ries"],
+    "\u2605 Favorites mode \u00b7 OK on a channel adds / removes it \u00b7 Back to finish": ["\u2605 \u0648\u0636\u0639 \u0627\u0644\u0645\u0641\u0636\u0644\u0629 \u00b7 OK \u0639\u0644\u0649 \u0642\u0646\u0627\u0629 \u064a\u0636\u064a\u0641\u0647\u0627 \u0623\u0648 \u064a\u062d\u0630\u0641\u0647\u0627 \u00b7 Back \u0644\u0644\u0625\u0646\u0647\u0627\u0621", "\u2605 Modo favoritos \u00b7 OK en un canal lo a\u00f1ade o lo quita \u00b7 Back para terminar", "\u2605 Favoritenmodus \u00b7 OK bei einem Sender f\u00fcgt ihn hinzu/entfernt ihn \u00b7 Back zum Beenden", "\u2605 Mode favoris \u00b7 OK sur une cha\u00eene l'ajoute ou la retire \u00b7 Back pour terminer"],
+    "You have the latest version": ["\u0644\u062f\u064a\u0643 \u0623\u062d\u062f\u062b \u0625\u0635\u062f\u0627\u0631", "Tienes la \u00faltima versi\u00f3n", "Du hast die neueste Version", "Vous avez la derni\u00e8re version"],
+    "Can't reach the update service": ["\u062a\u0639\u0630\u0651\u0631 \u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u062e\u062f\u0645\u0629 \u0627\u0644\u062a\u062d\u062f\u064a\u062b", "No se puede contactar con el servicio de actualizaciones", "Update-Dienst nicht erreichbar", "Impossible de joindre le service de mise \u00e0 jour"],
+    "Update failed": ["\u0641\u0634\u0644 \u0627\u0644\u062a\u062d\u062f\u064a\u062b", "Error en la actualizaci\u00f3n", "Update fehlgeschlagen", "\u00c9chec de la mise \u00e0 jour"],
+    "The update could not be downloaded or verified. Your current version keeps working.": ["\u062a\u0639\u0630\u0651\u0631 \u062a\u0646\u0632\u064a\u0644 \u0627\u0644\u062a\u062d\u062f\u064a\u062b \u0623\u0648 \u0627\u0644\u062a\u062d\u0642\u0642 \u0645\u0646\u0647. \u0627\u0644\u0646\u0633\u062e\u0629 \u0627\u0644\u062d\u0627\u0644\u064a\u0629 \u062a\u0633\u062a\u0645\u0631 \u0628\u0627\u0644\u0639\u0645\u0644.", "No se pudo descargar o verificar la actualizaci\u00f3n. Tu versi\u00f3n actual sigue funcionando.", "Das Update konnte nicht heruntergeladen oder gepr\u00fcft werden. Deine aktuelle Version l\u00e4uft weiter.", "Impossible de t\u00e9l\u00e9charger ou de v\u00e9rifier la mise \u00e0 jour. Votre version actuelle continue de fonctionner."]
+  };
+  function T(s) {
+    if (!s) return s;
+    var l = curLang();
+    if (l === "en") return s;
+    var idx = ["en", "ar", "es", "de", "fr"].indexOf(l) - 1;
+    var row = I18N[s];
+    return row && row[idx] ? row[idx] : s;
+  }
+
   function boot() {
+    applyLangDir();
     applyTheme();
     detectFlexGap();
     if (DEV) window.__ss = { router: router_exports, session, nav: nav_exports };

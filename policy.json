@@ -7,10 +7,10 @@
   "support": "",
   "activationServer": "",
   "update": {
-    "version": "1.0.1",
+    "version": "1.0.3",
     "url": "https://raw.githubusercontent.com/mi23-cloud/mira/main/app.bundle.js",
-    "sig": "du4oGODpaP4e7jVe9Jui5/7qfQr+SO42Vg1R8MMpIxrSPUoYRF23kQuCncwK5oNieaL4lqixdnszwSEQHFBUDQ==",
-    "notes": "أيقونة جديدة، سطوع افتراضي 60%، وألوان Gold وSilver وChampions Blue",
-    "size": 454713
+    "sig": "lGvzpz+yj+InJqWOcpzBVeYQu8v+iyLQC1h8w2C4Zwns1znyBRXNM7w7Oy0nEvFf7UOMYWl3/ibFkN9ZGp4qCg==",
+    "notes": "Champions Blue أفتح، اشتراكات اللوحة تظهر باسم Provider فقط",
+    "size": 464922
   }
 }
